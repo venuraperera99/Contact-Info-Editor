@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
 import { Box, Typography } from '@mui/material';
 import { Form, Row, CountrySelect, CountryCard, CountryIcon, Label, CustomTextField, CustomButton, ProfilePictureWrapper, ProfilePicture, PencilIconStyled, HiddenFileInput } from '../styles/ContactFormStyles';
 import CanadaIcon from '../assets/canada-2 1.svg';
@@ -17,6 +18,24 @@ const ContactForm = () => {
     const [profilePic, setProfilePic] = useState(DefaultProfilePic);
     const fileInputRef = useRef(null);
 
+    useEffect(() => {
+        axios.get(`${process.env.REACT_APP_API_BASE_URL}/contact`)
+            .then(response => {
+                if (response.data) {
+                    setContact({
+                        firstName: response.data.first_name,
+                        lastName: response.data.last_name,
+                        phoneNumber: response.data.phone_number,
+                        jobTitle: response.data.job_title,
+                        country: response.data.country,
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('There was an error fetching the contact data', error);
+            });
+    }, []);
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setContact(prev => ({ ...prev, [name]: value }));
@@ -33,7 +52,16 @@ const ContactForm = () => {
         }
     };
 
-    const handleSubmit = (e) => e.preventDefault(); // Handle form submission
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        axios.post(`${process.env.REACT_APP_API_BASE_URL}/contact`, contact)
+            .then(response => {
+                console.log('Contact saved:', response.data);
+            })
+            .catch(error => {
+                console.error('There was an error saving the contact data', error);
+            });
+    };
 
     const openFilePicker = () => fileInputRef.current?.click();
 
